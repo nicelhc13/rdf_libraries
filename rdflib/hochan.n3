@@ -1,0 +1,7 @@
+# I want to state that my name is Hochan Lee and my homepage address is 
+# ‘github.com/nicelhc13.’
+@prefix exp: <https://example.com> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+
+exp:i foaf:name "Hochan Lee". # URI(subject) URI(subject) literal(string)
+exp:i foaf:homepage "github.com/nicelhc13".

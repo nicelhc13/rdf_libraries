@@ -1,4 +1,5 @@
 import rdflib
+import sys
 
 # rdflib supports N3, XML, NTriples, Turtle, and Trix.
 
@@ -9,14 +10,14 @@ RDFXML = 3
 
 RDFString = [ "n3", "turtle", "nt", "application/rdf+xml" ] 
 
-inputFormat  = N3
+inputFormat  = RDFXML
 targetFormat = TURTLE
 
 # create a Graph.
 g = rdflib.Graph()
 
 # open a file.
-f = open("definehochan")
+f = open(sys.argv[1])
 
 # parse in an RDF file hosted on the Internet
 # result = g.parse("http://www.w3.org/People/Berners-Lee/card")
