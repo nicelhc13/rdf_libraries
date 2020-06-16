@@ -1,0 +1,4 @@
+MATCH (resource) DETACH DELETE resource;
+CALL n10s.graphconfig.init();
+CALL n10s.rdf.import.fetch("file://home/lhc/Internship/katana/rdf_libraries/data/yago_lang_en.nt", "N-Triples");
+MATCH (n) return n;

@@ -10,8 +10,8 @@ RDFXML = 3
 
 RDFString = [ "n3", "turtle", "nt", "application/rdf+xml" ] 
 
-inputFormat  = RDFXML
-targetFormat = TURTLE
+inputFormat  = N3
+targetFormat = RDFXML
 
 # create a Graph.
 g = rdflib.Graph()
