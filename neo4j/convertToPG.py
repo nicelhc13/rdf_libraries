@@ -36,7 +36,19 @@ TODO get and print the returned exception statements from the CALL.
 def import_RDF_to_PG(session, input):
   print("Import the input RDF.. :"+input)
   session.run("CALL n10s.graphconfig.init({handleRDFTypes: 'LABELS_AND_NODES'});")
-#session.run("CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE")
+
+  #session.run("DROP CONSTRAINT n10s_unique_uri")
+  uniqConstExt = False
+  for constraint in session.run("call db.constraints()"):
+    if (constraint[0] == "n10s_unique_uri"):
+      uniqConstExt = True
+
+  if uniqConstExt:
+    print("Unique URI constraint is already enabled.")
+  else:
+    print("Enable an unique URI constraint.")
+    session.run("CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE")
+
   session.run("CALL n10s.rdf.import.fetch('file:///"+input+"', 'N-Triples')")
   print("Importing done.")
 
