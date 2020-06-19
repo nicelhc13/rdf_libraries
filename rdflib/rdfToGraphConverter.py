@@ -5,7 +5,8 @@ Converter from an RDF serialized text to a visualized .png graph.
 Parameters:
 
 -i (--input): pass the input of an RDF text
--o (--output): pass the output of a generated visualized RDF graph
+-o (--output): pass the output of a converted RDF text
+-g (--graph): pass the output of a generated visualized RDF graph
 -s (--source): pass an input RDF format
                (N3: 0, Turtle: 1, NTriple: 2, RDF/XML: 3, default=RDF/XML)
 -d (--destination): pass a target RDF format converted from the source
@@ -53,8 +54,13 @@ def main():
                          dest='inputRDFFile', required=True)
   optParser.add_argument('-o', '--output', type=str,
                          help='Specify an output file name for'
-                               'the visualized RDF graph.',
-                         dest='outputImgFname', required=True)
+                               'the converted RDF graph.',
+                         dest='outputRDFFile', required=True)
+  optParser.add_argument('-g', '--graph', type=str,
+                         help='Specify an output file name for'
+                               'the visualized graph.',
+                         dest='outputImgFname', default='graph.out')
+#dest='outputImgFname', required=True)
   optParser.add_argument('-s', '--source', type=int,
                          help='Specify an input RDF format to be converted:'
                               '(N3: 0, Turtle: 1, NTriple: 2, RDF/XML: 3, '
@@ -68,6 +74,7 @@ def main():
   args = optParser.parse_args()
 
   inputRDFFile   = args.inputRDFFile
+  outputRDFFile  = args.outputRDFFile
   outputImgFname = args.outputImgFname
 
   srcRDFFormat  = RDFXML
@@ -79,16 +86,13 @@ def main():
   if args.destination is not None:
     destRDFFormat = args.destination
 
-  print("\n** Passed arguments *************************** ")
-  print()
+  print("\n** Passed arguments ***************************\n ")
   print("\tInput file name: "+inputRDFFile)
-  print("\tOutput file name: "+outputImgFname)
+  print("\tOutput file name: "+outputRDFFile)
+  print("\tFile name of the Visualized graph: "+outputImgFname)
   print("\tInput RDF format: "+RDFString[srcRDFFormat])
   print("\tOutput RDF format: "+RDFString[destRDFFormat])
-  print()
-  print("*********************************************** ")
-  print()
-
+  print("\n*********************************************** ")
 
   # create a Graph.
   g = rdflib.Graph()
@@ -111,9 +115,10 @@ def main():
   destRDFFormatStr = RDFString[destRDFFormat]
   result = g.serialize(format=destRDFFormatStr).decode("utf-8")
 
-  print("** Converted "+RDFString[srcRDFFormat]+" to "+destRDFFormatStr)
-  print(result)
-  print("")
+  print("** RDF conversion is done")
+  #print("** Converted "+RDFString[srcRDFFormat]+" to "+destRDFFormatStr)
+  f = open(outputRDFFile, 'w')
+  f.write(result)
 
   if destRDFFormat == RDFXML:
     visualize(g, outputImgFname)
