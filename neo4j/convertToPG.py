@@ -7,7 +7,15 @@ Parameters:
 -i (--input): pass the input of an RDF text
 """
 import argparse
+import os
 from neo4j import GraphDatabase
+
+TURTLE = 0
+NT     = 1
+RDFXML = 2
+
+# TODO n3 is not the target.
+RDFString = [ "Turtle", "N-Triples", "RDF/XML" ] 
 
 uri = "neo4j://localhost:7687"
 usrID = "neo4j"
@@ -33,7 +41,7 @@ TODO get and print the returned exception statements from the CALL.
      The current action is to happen nothing. (Should check the browser inter
      -face in this case.)
 """
-def import_RDF_to_PG(session, input):
+def import_RDF_to_PG(session, input, rdfFormatIdx):
   print("Import the input RDF.. :"+input)
   session.run("CALL n10s.graphconfig.init({handleRDFTypes: 'LABELS_AND_NODES'});")
 
@@ -49,9 +57,16 @@ def import_RDF_to_PG(session, input):
     print("Enable an unique URI constraint.")
     session.run("CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE")
 
-  session.run("CALL n10s.rdf.import.fetch('file:///"+input+"', 'N-Triples')")
+  session.run("CALL n10s.rdf.import.fetch('file:///"+input+"', '"+RDFString[rdfFormatIdx]+"')")
   print("Importing done.")
 
+#def dumpNeo4j(output):
+#  print("Dump the DB..")
+#  os.system("neo4j-admin dump --database=neo4j --to="+output)
+
+def exportToCypher(session, output):
+	session.run("CALL apoc.export.cypher.all('"+output+".cypher')");
+	
 """
 Get the number of nodes and the relationships.
 TODO merge the two queries! (e.g. UNION or return multi values)
@@ -68,15 +83,37 @@ def main():
                          help='Specify an input file name having'
                                'RDF formmated texts.',
                          dest='inputRDFFile', required=True)
+  optParser.add_argument('-o', '--output', type=str,
+                         help='Specify an output fle name having'
+                               'exported CYPHER statements.',
+                         dest='outputCypher', required=True)
+
+  optParser.add_argument('-s', '--source', type=int,
+                         help='Specify an input RDF format to be converted:'
+                              '(N3: 0, Turtle: 1, NTriple: 2, RDF/XML: 3, '
+                              'default=RDF/XML)')
 
   args = optParser.parse_args()
   inputRDFFile = args.inputRDFFile
+  outputCypher = args.outputCypher
 
-  driver = GraphDatabase.driver(uri, auth=("neo4j", "1"))
+  srcRDFFormat  = RDFXML
+
+  # If the I/O RDF formats are passed by an user.
+  if args.source is not None:
+    srcRDFFormat = args.source
+
+  print("\n** Passed arguments ***************************\n ")
+  print("\tInput file name: "+inputRDFFile)
+  print("\tInput RDF format: "+RDFString[srcRDFFormat])
+  print("\n*********************************************** ")
+
+  driver = GraphDatabase.driver(uri, auth=(usrID, usrPW))
   with driver.session() as session:
     delete_existing_db(session)
-    import_RDF_to_PG(session, inputRDFFile)
+    import_RDF_to_PG(session, inputRDFFile, srcRDFFormat)
     get_num_nodes_edges(session)
+    exportToCypher(session, outputCypher)
 
 if __name__ == "__main__":
   main()
