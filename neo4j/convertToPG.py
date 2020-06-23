@@ -66,6 +66,12 @@ def import_RDF_to_PG(session, input, rdfFormatIdx):
 
 def exportToCypher(session, output):
 	session.run("CALL apoc.export.cypher.all('"+output+".cypher')");
+
+def exportToGraphML(session, output, printType):
+  if (printType == 1):
+    session.run("CALL apoc.export.graphml.all('"+output+".graphml', {useTypes:true})")
+  else:
+    session.run("CALL apoc.export.graphml.all('"+output+".graphml', {})")
 	
 """
 Get the number of nodes and the relationships.
@@ -84,18 +90,23 @@ def main():
                                'RDF formmated texts.',
                          dest='inputRDFFile', required=True)
   optParser.add_argument('-o', '--output', type=str,
-                         help='Specify an output fle name having'
-                               'exported CYPHER statements.',
-                         dest='outputCypher', required=True)
+                         help='Specify an output file name',
+                         dest='output', required=True)
 
   optParser.add_argument('-s', '--source', type=int,
                          help='Specify an input RDF format to be converted:'
                               '(N3: 0, Turtle: 1, NTriple: 2, RDF/XML: 3, '
                               'default=RDF/XML)')
 
+  optParser.add_argument('-t', '--type', type=int,
+                         help="If you want to print out type information,"
+                               "please specify '-t' or '--type' (default: 0)",
+                         dest='printType', default=0) 
+
   args = optParser.parse_args()
   inputRDFFile = args.inputRDFFile
-  outputCypher = args.outputCypher
+  output = args.output
+  printType = args.printType
 
   srcRDFFormat  = RDFXML
 
@@ -105,7 +116,10 @@ def main():
 
   print("\n** Passed arguments ***************************\n ")
   print("\tInput file name: "+inputRDFFile)
+  print("\tOutput file name: "+output)
   print("\tInput RDF format: "+RDFString[srcRDFFormat])
+  if printType == 1:
+    print("\tPrint type to GraphML")
   print("\n*********************************************** ")
 
   driver = GraphDatabase.driver(uri, auth=(usrID, usrPW))
@@ -113,7 +127,8 @@ def main():
     delete_existing_db(session)
     import_RDF_to_PG(session, inputRDFFile, srcRDFFormat)
     get_num_nodes_edges(session)
-    exportToCypher(session, outputCypher)
+    exportToGraphML(session, output, printType)
+    #exportToCypher(session, outputCypher)
 
 if __name__ == "__main__":
   main()
