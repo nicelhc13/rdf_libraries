@@ -14,7 +14,7 @@ for ucode in ${T_UNICODES[@]}
 do
   echo $ucode
   # Literal unicode or encoded string as UTF8.
-  SED_PARAM+="\u"${ucode}"|"$(echo -ne '\u'${ucode})"|"
+  SED_PARAM+="\\\u"${ucode}"|"$(echo -ne '\u'${ucode})"|"
 #SED_PARAM+="\\u"${ucode}"|"
 done
 
