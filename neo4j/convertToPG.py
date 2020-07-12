@@ -98,7 +98,13 @@ def main():
   optParser.add_argument('-i', '--input', type=str,
                          help='Specify an input file name having'
                                'RDF formmated texts.',
-                         dest='inputRDFFile', required=True)
+                         dest='inputRDFFile', required=False)
+
+  optParser.add_argument('-d', '--directory', type=str,
+                         help='Specify an input directory having'
+                               'RDF formmated texts.',
+                         dest='inputDirectory', required=False)
+
   optParser.add_argument('-o', '--output', type=str,
                          help='Specify an output file name',
                          dest='output', required=True)
@@ -113,17 +119,30 @@ def main():
                                "please specify '-t' or '--type' (default: 0)",
                          dest='printType', default=0) 
 
+  if not (optParser.parse_args().inputRDFFile or
+          optParser.parse_args().inputDirectory):
+    print("Either input rdf file or input rdf directory is required\n")
+    exit()
+
   args = optParser.parse_args()
   inputRDFFile = args.inputRDFFile
+  inputDirectory = args.inputDirectory
   output = args.output
   printType = args.printType
-
   srcRDFFormat  = RDFXML
-
 
   # Convert relative to absolute path.
   currPath = os.path.abspath(os.path.dirname(__file__))
-  inputRDFFile = os.path.join(currPath, inputRDFFile)
+
+  if inputRDFFile:
+    inputRDFFile = os.path.join(currPath, inputRDFFile)
+  else:
+    print("Input RDF file is not specified")
+
+  if inputDirectory:
+    inputDirectory = os.path.join(currPath, inputDirectory)
+  else:
+    print("Input directory is not specified")
   output = os.path.join(currPath, output)
 
   # If the I/O RDF formats are passed by an user.
