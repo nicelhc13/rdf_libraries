@@ -8,6 +8,7 @@ Parameters:
 """
 import argparse
 import os
+import sys
 from neo4j import GraphDatabase
 
 TURTLE = 0
@@ -118,6 +119,12 @@ def main():
   printType = args.printType
 
   srcRDFFormat  = RDFXML
+
+
+  # Convert relative to absolute path.
+  currPath = os.path.abspath(os.path.dirname(__file__))
+  inputRDFFile = os.path.join(currPath, inputRDFFile)
+  output = os.path.join(currPath, output)
 
   # If the I/O RDF formats are passed by an user.
   if args.source is not None:
