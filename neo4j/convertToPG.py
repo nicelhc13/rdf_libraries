@@ -57,8 +57,17 @@ def import_RDF_to_PG(session, input, rdfFormatIdx):
     print("Enable an unique URI constraint.")
     session.run("CREATE CONSTRAINT n10s_unique_uri ON (r:Resource) ASSERT r.uri IS UNIQUE")
 
-  session.run("CALL n10s.rdf.import.fetch('file:///"+input+"', '"+RDFString[rdfFormatIdx]+"')")
-  print("Importing done.")
+  #session.run("CALL n10s.rdf.import.fetch('file:///"+input+"', '"+RDFString[rdfFormatIdx]+"')")
+  importCypher = "CALL n10s.rdf.import.fetch('file:///"+input+"', '"+RDFString[rdfFormatIdx]+"') \
+                  YIELD terminationStatus, triplesLoaded, triplesParsed, extraInfo \
+                  RETURN extraInfo"
+  with session.begin_transaction() as tx:
+    res = tx.run(importCypher)
+    # printout the result of the query.
+    for r in res:
+      print(r["extraInfo"]);
+      continue;
+    print("Importing done.")
 
 #def dumpNeo4j(output):
 #  print("Dump the DB..")
