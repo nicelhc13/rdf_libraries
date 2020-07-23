@@ -135,10 +135,6 @@ def main():
                                'RDF formmated texts.',
                          dest='inputDirectory', required=False)
 
-  #optParser.add_argument('-o', '--output', type=str,
-  #                       help='Specify an output file name',
-  #                       dest='output', required=True)
-
   optParser.add_argument('-s', '--source', type=int,
                          help='Specify an input RDF format to be converted:'
                               '(N3: 0, Turtle: 1, NTriple: 2, RDF/XML: 3, '
@@ -147,7 +143,7 @@ def main():
   optParser.add_argument('-t', '--type', type=int,
                          help="If you want to print out type information,"
                                "please specify '-t' or '--type' (default: 0)",
-                         dest='printType', default=0) 
+                         dest='printType', default=1)
 
   if not (optParser.parse_args().inputRDFFile or
           optParser.parse_args().inputDirectory):
