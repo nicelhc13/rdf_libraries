@@ -62,10 +62,10 @@ TODO should allow users to specify configurations.
 """
 def import_RDF_to_PG(session, input, rdfFormatIdx):
   print("Import the input RDF :"+input)
-  importCypher = "CALL n10s.rdf.import.fetch('file:///"+input+"', '"+
-                 RDFString[rdfFormatIdx]+"')"+
-                 "YIELD terminationStatus, triplesLoaded, triplesParsed, "+
-                 "extraInfo RETURN extraInfo"
+  importCypher = ("CALL n10s.rdf.import.fetch('file:///"+input+"', '"      \
+                 +RDFString[rdfFormatIdx]+"')"                             \
+                 "YIELD terminationStatus, triplesLoaded, triplesParsed, " \
+                 "extraInfo RETURN extraInfo")
   with session.begin_transaction() as tx:
     res = tx.run(importCypher)
     # printout the result of the query.
