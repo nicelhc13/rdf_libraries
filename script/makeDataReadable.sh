@@ -1,8 +1,21 @@
+################################################################################
+#
+# Replace/remove unacceptable Unicodes or formats by RegEx.
+# This script is used for DBPedia and Wikidata.
+# All unacceptable unicodes or formats were also came from the two datasets.
+# It only supports NTriple RDF formats.
+#
+# Run:
+#
+#   $ ./refineNT.sh [DIRECTORY HAVING NT RDFs]
+#
+################################################################################
+
 #!/bin/bash
 
-EXTEND=".ttl"
 EXTEND=".nt"
 
+# Unacceptable unicodes for URL.
 T_UNICODES=( 'FFFA' 'FFFB' 'FFFC' 'A711' 'A712'
              'FFFD' 'FFFE' 'FFFF' 'A710' 'A713'
              'FFF0' 'FFF1' 'FFF2' 'A70F' 'A714'
@@ -50,38 +63,33 @@ T_UNICODES=( 'FFFA' 'FFFB' 'FFFC' 'A711' 'A712'
 DIR=$1
 
 SED_PARAM=""
-# UNICODE REPLACEMENT
+
+# Remove unacceptable unicodes from URIs. 
+# e.g. <^"'..> --> <..>
 for ucode in ${T_UNICODES[@]}
 do
   echo $ucode
-  # Literal unicode or encoded string as UTF8.
   SED_PARAM+="s/\(.*<[^>]*\)\\\u${ucode}\([^<]*>.*\)/\1r\2/g;"
   SED_PARAM+="s/\(.*<[^>]*\)$(echo -ne '\u'${ucode})\([^<]*>.*\)/\1r\2/g;"
 done
+# Remove space from URIs.
+# e.g. <https://test. . . .> --> <http://test....>
 SED_PARAM+="s/\(.*<[^>]*\)\s\([^<]*>.*\)/\1r\2/g;"
 echo "Ucode construction done .."
 
 SED_PARAM=":begin;"${SED_PARAM}
 
-#SED_PARAM=${SED_PARAM}"/WARN  riot/d;"
-#SED_PARAM=${SED_PARAM}"/INFO  riot/d;"
-#SED_PARAM=${SED_PARAM}"/<*_+[^>]*>/d;" # remove URL having _ --> it removes valid URL
+# remove URL starts from _, but not followed by :.
+SED_PARAM=${SED_PARAM}"/^_[^:]/d;"
+# Replace IPv4 URIs to replaced URIs.
+# It is very rough filtering since it replaces valid IPv4 URIs too.
+SED_PARAM+="s/<http:\\/\\/[0-9]+[^>]*>/<http:\\/\\/replaced.com>/g;"
+SED_PARAM+="s/<https:\\/\\/[0-9]+[^>]*>/<https:\\/\\/replaced.com>/g;"
+SED_PARAM+="s/<ftp:\\/\\/[0-9]+[^>]*>/<ftp:\\/\\/replaced.com>/g;"
+SED_PARAM+="t begin"
 
-SED_PARAM=${SED_PARAM}"/^_[^:]/d;" # remove URL starts from _, but not followed by :
-SED_PARAM=${SED_PARAM}"s/<http:\\/\\/[0-9]+[^>]*>/<http:\\/\\/replaced.com>/g;"
-SED_PARAM=${SED_PARAM}"s/<https:\\/\\/[0-9]+[^>]*>/<https:\\/\\/replaced.com>/g;"
-SED_PARAM=${SED_PARAM}"s/<ftp:\\/\\/[0-9]+[^>]*>/<ftp:\\/\\/replaced.com>/g;"
-
-#SED_PARAM=${SED_PARAM}":begin;s/\(.*<[^>]*\)\s\([^<]*>.*\)/\1r\2/;t begin"
-#SED_PARAM=${SED_PARAM}"s/\[//g"
-#SED_PARAM=${SED_PARAM}"s/\]//g"
-
-#SED_PARAM=${SED_PARAM}"s/^(_)?:.*/_:/g" # replace _ to _:
-
-SED_PARAM=${SED_PARAM}"t begin"
 echo "Target DIR:" $1
 
-#for f in $DIR/*
 for f in `find ${DIR} -name "*${EXTEND}"`;
 do
   fname=${f##*/}
