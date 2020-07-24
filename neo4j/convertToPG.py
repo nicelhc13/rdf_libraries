@@ -186,13 +186,14 @@ def main():
       convertLog[rdfFile] = extraInfo
 
   print("\n\n **** Import results **** \n")
+  failedFileList = []
   if importSuccess == True:
     print("Importing succeeded.")
     print("Exporting started.")
     # Only export GraphML if all RDFs are successfully imported.
     exportToGraphML(session, "graphML/"+rdfFile+".graphML", printType)
+    print("Exporting done.")
   else:
-    failedFileList = []
     for fpath in fileList:
       fname = os.path.basename(fpath)
       if convertLog[fname] != "":
