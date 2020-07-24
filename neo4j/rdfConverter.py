@@ -1,10 +1,28 @@
 ################################################################################
-# Convert an RDF serialized text to a neo4j property graph.
+# Import an RDF serialized text to a neo4j, and
+# export to GraphML format.
 #
-# Parameters:
 #
-#-i (--input): pass the input of an RDF text
+# <Parameters>
+#
+#  -i (--input): pass a target RDF to be imported
+#
+#  -d (--directory): pass a directory having RDFs
+#
+#  -s (--source): pass a RDF format 
+#                 (0: Turtle, 1: N-triples, 2: RDF/XML (default))
+#
+#  -t (--type): specify if export GraphML with type information
+#               (0: False, 1: True (default)) 
+#
+# <Examples>
+#
+# $ python rdfConverter.py -i [RDFfile].nt -s 1 -t 1
+#
+# $ python rdfConverter.py -d [Directory having multiple turtle RDFs] -s 0 -t 1
+#
 ################################################################################
+
 import argparse
 import os
 import sys
