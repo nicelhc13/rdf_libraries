@@ -1,7 +1,31 @@
 ################################################################################
 # Import an RDF serialized text to a neo4j, and
 # export to GraphML format.
+# User can specify either an individual RDF file or
+# a directory having multiple RDFs.
+# Note that if a directory is specified, then RDFs on the directory should have
+# the same format.
 #
+# If a direcotry is specified, this script iteratively attempts to
+# import RDFs on that. 
+# If one of the RDFs is failed to be imported, then this is logged and printed
+# after the execution. Finally, this script copies all the failed RDFs to
+# backup/ directory. Users can retry the import after they fix the RDFs.
+#
+#
+# <Prerequisite>
+#
+#  (1) neo4j plugin:
+#      Please run the following command to install neo4j python plugin.
+#
+#      $ pip install neo4j
+#
+#  (2) activate neo4j server:
+#      This script does not activate a neo4j server.
+#      You need to activate a neo4j server before you run this script.
+#      Please activate it by running the following command:
+#
+#      $ sudo neo4j start
 #
 # <Parameters>
 #
@@ -9,23 +33,34 @@
 #
 #  -d (--directory): pass a directory having RDFs
 #
-#  -s (--source): pass a RDF format 
+#  -f (--source): pass a RDF format 
 #                 (0: Turtle, 1: N-triples, 2: RDF/XML (default))
 #
 #  -t (--type): specify if export GraphML with type information
 #               (0: False, 1: True (default)) 
 #
+#  -r (--reset): delete/initialize neo4j DB
+#                (0: False (default), 1: True)
+#
+#  -u (--user): pass an user ID (default: neo4j)
+#
+#  -p (--pw): pass an user PW (default: neo4j)
+#
+#  --uri: pass an activated neo4j server URI
+#         (default: neo4j://localhost:7687)
+#
 # <Examples>
 #
-# $ python rdfConverter.py -i [RDFfile].nt -s 1 -t 1
+# $ python rdfConverter.py -i [RDFfile].nt -f 1 -t 1
 #
-# $ python rdfConverter.py -d [Directory having multiple turtle RDFs] -s 0 -t 1
+# $ python rdfConverter.py -d [Directory having multiple turtle RDFs] -f 0 -t 1
 #
 ################################################################################
 
 import argparse
 import os
 import sys
+import shutil
 from neo4j import GraphDatabase
 
 TURTLE = 0
@@ -34,15 +69,10 @@ RDFXML = 2
 
 RDFString = [ "Turtle", "N-Triples", "RDF/XML" ] 
 
-uri = "neo4j://localhost:7687"
-usrID = "neo4j"
-usrPW = "1" # NOTE: You should use your own account.
-            # Default account of the neo4j would be
-            # ID: neo4j and PW: neo4j.
-
 """
 Remove all existing neo4j data.
-NOTE that directly remove neo4j db directory is much faster than querying.
+NOTE that directly remove neo4j db directory from local FS
+is much faster than querying through this function.
 """
 def delete_existing_db(session):
   print("Delete existing data..")
@@ -120,32 +150,54 @@ def get_num_nodes_edges(session):
   print(str(nEdges.single()[0]) + " edge exist.")
 
 def main():
-  optParser = argparse.ArgumentParser()
+  optParser = argparse.ArgumentParser(
+              description=''' [Prerequisite]
+                          You need `neo4j` plugin. Please intall the plugin
+                          by running the following command:
+                          `$ pip install neo4j`.
+                          This script does not `activate` a neo4j server.
+                          Please run the command, `$ sudo neo4j start`, then 
+                          start a neo4j server before run this script.
+                          ''')
   # Either one file or a directory could be accepted.
   optParser.add_argument('-i', '--input', type=str,
-                         help='Specify an input file name having'
+                         help='Specify an input file name having '
                                'RDF formmated texts.',
                          dest='inputRDFFile', required=False)
 
-  optParser.add_argument('-p', '--path', type=str,
-                         help='Specify an input path having'
+  optParser.add_argument('-d', '--dir', type=str,
+                         help='Specify an input directory having '
                                'RDF formmated texts.',
                          dest='inputDirectory', required=False)
 
   optParser.add_argument('-f', '--format', type=int,
-                         help='Specify an input RDF format to be converted:'
+                         help='Specify an input RDF format to be converted '
                               '(Turtle: 0, NTriple: 1, RDF/XML:2, '
                               'default=RDF/XML)', dest='rdfFormat', default=2)
 
   optParser.add_argument('-t', '--type', type=int,
-                         help="If you want to print out type information,"
+                         help="If you want to print out type information, "
                                "please specify '-t' or '--type' (default: 0)",
                          dest='printType', default=1)
 
   optParser.add_argument('-r', '--reset', type=int,
-                         help="If you want to delete/initialize neo4j DB,"
+                         help="If you want to delete/initialize neo4j DB, "
                                "please specify '-r' or '--reset' (default: 0)",
                          dest='resetDB', default=0)
+
+  optParser.add_argument('-u', '--user', type=str,
+                         help="Specify an neo4j user ID (default: neo4j)",
+                         dest='usrID', default="neo4j")
+
+  optParser.add_argument('-p', '--pw', type=str,
+                         help="Specify an neo4j user password (default: neo4j)",
+                         dest='usrPW', default="neo4j")
+
+  optParser.add_argument('--uri', type=str,
+                         help=("Specify an activated neo4j URI."
+                               "(default: neo4j://localhost:7687)"),
+                         dest='uri', default="neo4j://localhost:7687")
+
 
   args = optParser.parse_args()
   inputRDFFile = args.inputRDFFile
@@ -153,6 +205,10 @@ def main():
   printType = args.printType
   resetDB = args.resetDB
   inputRDFFormat = args.rdfFormat 
+  usrID = args.usrID
+  usrPW = args.usrPW
+  uri   = args.uri
+
 
   if not (inputRDFFile or inputDirectory):
     print("Either input rdf file or input rdf directory is required\n")
@@ -174,6 +230,8 @@ def main():
     print("Input directory is not specified")
 
   print("\n** Passed arguments ***************************\n ")
+  print("\tNeo4j server URI: "+uri)
+  print("\tNeo4j user ID: "+usrID)
   print("\tInput file name: "+inputRDFFile)
   print("\tInput Dir: "+inputDirectory)
   print("\tInput RDF format: "+RDFString[inputRDFFormat])
@@ -227,6 +285,7 @@ def main():
   for fpath in failedFileList:
     if os.path.isfile(fpath):
       fname = os.path.basename(fpath)
+      os.mkdir("backup")
       # Aggregate failed RDFs to backup/ directory.
       shutil.copy(fpath, "backup/"+fname)
     else:
