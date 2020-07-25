@@ -1,4 +1,7 @@
 ################################################################################
+#
+# <Description>
+#
 # Import an RDF serialized text to a neo4j, and
 # export to GraphML format.
 # User can specify either an individual RDF file or
@@ -7,9 +10,9 @@
 # the same format.
 #
 # If a direcotry is specified, this script iteratively attempts to
-# import RDFs on that. 
-# If one of the RDFs is failed to be imported, then this is logged and printed
-# after the execution. Finally, this script copies all the failed RDFs to
+# import RDFs on there. 
+# If one of the RDFs is failed to be imported, this case is logged and printed
+# out after the execution. Finally, this script copies all the failed RDFs to
 # backup/ directory. Users can retry the import after they fix the RDFs.
 #
 #
@@ -72,7 +75,7 @@ RDFString = [ "Turtle", "N-Triples", "RDF/XML" ]
 """
 Remove all existing neo4j data.
 NOTE that directly remove neo4j db directory from local FS
-is much faster than querying through this function.
+is much faster than querying deletion through this function.
 """
 def delete_existing_db(session):
   print("Delete existing data..")
