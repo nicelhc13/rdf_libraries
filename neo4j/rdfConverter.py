@@ -127,8 +127,8 @@ def main():
                                'RDF formmated texts.',
                          dest='inputRDFFile', required=False)
 
-  optParser.add_argument('-d', '--directory', type=str,
-                         help='Specify an input directory having'
+  optParser.add_argument('-p', '--path', type=str,
+                         help='Specify an input path having'
                                'RDF formmated texts.',
                          dest='inputDirectory', required=False)
 
@@ -142,15 +142,21 @@ def main():
                                "please specify '-t' or '--type' (default: 0)",
                          dest='printType', default=1)
 
-  if not (optParser.parse_args().inputRDFFile or
-          optParser.parse_args().inputDirectory):
-    print("Either input rdf file or input rdf directory is required\n")
-    exit()
+  optParser.add_argument('-r', '--reset', type=int,
+                         help="If you want to delete/initialize neo4j DB,"
+                               "please specify '-r' or '--reset' (default: 0)",
+                         dest='resetDB', default=0)
 
   args = optParser.parse_args()
   inputRDFFile = args.inputRDFFile
   inputDirectory = args.inputDirectory
   printType = args.printType
+  resetDB = args.resetDB
+
+  if not (args.inputRDFFile or args.inputDirectory):
+    print("Either input rdf file or input rdf directory is required\n")
+    exit()
+
   srcRDFFormat  = RDFXML
 
   # Convert relative to absolute path.
@@ -193,7 +199,10 @@ def main():
   convertLog = {}
   importSuccess = True
   with driver.session() as session:
-    init_env(session)
+    # Only delete/initialize neo4j DB if user specifies.
+    if resetDB == 1:
+      init_env(session, resetDB)
+
     for rdfPath in fileList:
       print(rdfPath)
       rdfFile = os.path.basename(rdfPath)
