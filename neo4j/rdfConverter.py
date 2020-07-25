@@ -132,10 +132,10 @@ def main():
                                'RDF formmated texts.',
                          dest='inputDirectory', required=False)
 
-  optParser.add_argument('-s', '--source', type=int,
+  optParser.add_argument('-f', '--format', type=int,
                          help='Specify an input RDF format to be converted:'
                               '(Turtle: 0, NTriple: 1, RDF/XML:2, '
-                              'default=RDF/XML)')
+                              'default=RDF/XML)', dest='rdfFormat', default=2)
 
   optParser.add_argument('-t', '--type', type=int,
                          help="If you want to print out type information,"
@@ -152,12 +152,11 @@ def main():
   inputDirectory = args.inputDirectory
   printType = args.printType
   resetDB = args.resetDB
+  inputRDFFormat = args.rdfFormat 
 
-  if not (args.inputRDFFile or args.inputDirectory):
+  if not (inputRDFFile or inputDirectory):
     print("Either input rdf file or input rdf directory is required\n")
     exit()
-
-  srcRDFFormat  = RDFXML
 
   # Convert relative to absolute path.
   currPath = os.path.abspath(os.path.dirname(__file__))
@@ -174,14 +173,10 @@ def main():
     inputDirectory = "Not specified"
     print("Input directory is not specified")
 
-  # If the I/O RDF formats are passed by an user.
-  if args.source is not None:
-    srcRDFFormat = args.source
-
   print("\n** Passed arguments ***************************\n ")
   print("\tInput file name: "+inputRDFFile)
   print("\tInput Dir: "+inputDirectory)
-  print("\tInput RDF format: "+RDFString[srcRDFFormat])
+  print("\tInput RDF format: "+RDFString[inputRDFFormat])
   if printType == 1:
     print("\tPrint types to GraphML")
   print("\n*********************************************** ")
@@ -206,7 +201,7 @@ def main():
     for rdfPath in fileList:
       print(rdfPath)
       rdfFile = os.path.basename(rdfPath)
-      extraInfo = import_RDF_to_PG(session, rdfPath, srcRDFFormat)
+      extraInfo = import_RDF_to_PG(session, rdfPath, inputRDFFormat)
       get_num_nodes_edges(session)
       if extraInfo != "": # extraInfo should be empty if a import succeeded.
         importSuccess = False
