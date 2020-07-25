@@ -285,9 +285,11 @@ def main():
   for fpath in failedFileList:
     if os.path.isfile(fpath):
       fname = os.path.basename(fpath)
-      os.mkdir("backup")
+      if not os.path.isdir("backup"):
+        os.mkdir("backup")
       # Aggregate failed RDFs to backup/ directory.
       shutil.copy(fpath, "backup/"+fname)
+      print("\n Failed RDFs are copied to backup/ direcotry.")
     else:
       print("File does not exist", fpath)
 
