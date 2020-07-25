@@ -116,7 +116,7 @@ Get the number of nodes and the relationships.
 def get_num_nodes_edges(session):
   nNodes = session.run("MATCH (n) RETURN count(n)")
   print(str(nNodes.single()[0]) + " nodes exist.")
-  nEdges = session.run("MATCH (n)-[r]->() RETURN count(r)")
+  nEdges = session.run("MATCH ()-[r]->() RETURN count(r)")
   print(str(nEdges.single()[0]) + " edge exist.")
 
 def main():
