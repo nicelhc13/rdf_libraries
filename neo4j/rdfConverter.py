@@ -257,7 +257,7 @@ def main():
   with driver.session() as session:
     # Only delete/initialize neo4j DB if user specifies.
     if resetDB == 1:
-      init_env(session, resetDB)
+      init_env(session)
 
     for rdfPath in fileList:
       print(rdfPath)
