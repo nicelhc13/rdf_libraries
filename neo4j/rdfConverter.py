@@ -10,7 +10,7 @@
 # the same format.
 #
 # If a direcotry is specified, this script iteratively attempts to
-# import RDFs on there. 
+# import RDFs on there.
 # If one of the RDFs is failed to be imported, this case is logged and printed
 # out after the execution. Finally, this script copies all the failed RDFs to
 # backup/ directory. Users can retry the import after they fix the RDFs.
@@ -32,11 +32,11 @@
 #
 # <Parameters>
 #
-#  -i (--input): pass a target RDF to be imported
+#  -i (--input): pass a source RDF to be imported
 #
-#  -d (--directory): pass a directory having RDFs
+#  -d (--directory): pass a directory having source RDFs
 #
-#  -f (--source): pass a RDF format 
+#  -f (--source): pass a RDF format
 #                 (0: Turtle, 1: N-triples, 2: RDF/XML (default))
 #
 #  -t (--type): specify if export GraphML with type information
@@ -70,7 +70,7 @@ TURTLE = 0
 NT     = 1
 RDFXML = 2
 
-RDFString = [ "Turtle", "N-Triples", "RDF/XML" ] 
+RDFString = [ "Turtle", "N-Triples", "RDF/XML" ]
 
 """
 Remove all existing neo4j data.
@@ -91,7 +91,7 @@ def init_env(session):
               "{handleRDFTypes: 'LABELS',"+
               " handleMultival: 'ARRAY'});")
 
-  # Check if unique uri constraint is already enabled.  
+  # Check if unique uri constraint is already enabled.
   uniqConstExt = False
   for constraint in session.run("call db.constraints()"):
     if (constraint[0] == "n10s_unique_uri"):
@@ -159,7 +159,7 @@ def main():
                           by running the following command:
                           `$ pip install neo4j`.
                           This script does not `activate` a neo4j server.
-                          Please run the command, `$ sudo neo4j start`, then 
+                          Please run the command, `$ sudo neo4j start`, then
                           start a neo4j server before run this script.
                           ''')
   # Either one file or a directory could be accepted.
@@ -207,11 +207,10 @@ def main():
   inputDirectory = args.inputDirectory
   printType = args.printType
   resetDB = args.resetDB
-  inputRDFFormat = args.rdfFormat 
+  inputRDFFormat = args.rdfFormat
   usrID = args.usrID
   usrPW = args.usrPW
   uri   = args.uri
-
 
   if not (inputRDFFile or inputDirectory):
     print("Either input rdf file or input rdf directory is required\n")
@@ -222,33 +221,29 @@ def main():
 
   if inputRDFFile:
     inputRDFFile = os.path.join(currPath, inputRDFFile)
-  else:
-    inputRDFFile = "Not specified"
-    print("Input RDF file is not specified")
 
   if inputDirectory:
     inputDirectory = os.path.join(currPath, inputDirectory)
-  else:
-    inputDirectory = "Not specified"
-    print("Input directory is not specified")
 
   print("\n** Passed arguments ***************************\n ")
   print("\tNeo4j server URI: "+uri)
   print("\tNeo4j user ID: "+usrID)
-  print("\tInput file name: "+inputRDFFile)
-  print("\tInput Dir: "+inputDirectory)
+  if inputRDFFile:
+    print("\tInput file name: "+inputRDFFile)
+  if inputDirectory:
+    print("\tInput Dir: "+inputDirectory)
   print("\tInput RDF format: "+RDFString[inputRDFFormat])
   if printType == 1:
     print("\tPrint types to GraphML")
   print("\n*********************************************** ")
 
-  # Construct target RDF file lists.
+  # Construct source RDF file lists.
   fileList = []
-  if inputDirectory != "Not specified":
+  if inputDirectory:
     for rdfFile in os.listdir(inputDirectory):
       rdfFname = os.fsdecode(rdfFile)
       fileList.append(inputDirectory+"/"+rdfFile)
-  if inputRDFFile != "Not specified":
+  if inputRDFFile:
     fileList.append(inputRDFFile)
 
   driver = GraphDatabase.driver(uri, auth=(usrID, usrPW))
@@ -257,7 +252,7 @@ def main():
   with driver.session() as session:
     # Only delete/initialize neo4j DB if user specifies.
     if resetDB == 1:
-      init_env(session, resetDB)
+      init_env(session)
 
     for rdfPath in fileList:
       print(rdfPath)
@@ -274,7 +269,7 @@ def main():
     print("Importing succeeded.")
     print("Exporting started.")
     # Only export GraphML if all RDFs are successfully imported.
-    exportToGraphML(session, "graphML/"+rdfFile+".graphML", printType)
+    exportToGraphML(session, rdfFile+".graphML", printType)
     print("Exporting done.")
   else:
     for fpath in fileList:
